@@ -46,12 +46,13 @@ var Eventful = function () {
           this._events[event] = [];
         }
 
-        this._events[event].push({
-          handler: handler,
-          owner: owner
-        });
+        var item = {
+          handler: handler
+        };
 
         if (owner) {
+          item.owner = owner;
+
           if (!owner._listeningTo[this._id]) {
             owner._listeningTo[this._id] = {
               ref: this,
@@ -61,6 +62,8 @@ var Eventful = function () {
 
           owner._listeningTo[this._id].handlers.push(handler);
         }
+
+        this._events[event].push(item);
 
         return this;
       }
@@ -186,8 +189,7 @@ var Eventful = function () {
 
   function factory() {
     var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    Object.defineProperties(obj, propertyDescriptors);
-    return obj;
+    return Object.defineProperties(obj, propertyDescriptors).initialize();
   }
 
   var Class = /*#__PURE__*/_createClass(function Class() {
@@ -196,7 +198,7 @@ var Eventful = function () {
     this.initialize();
   });
 
-  factory(Class.prototype);
+  Object.defineProperties(Class.prototype, propertyDescriptors);
   var domPropertyDescriptors = Object.assign({}, propertyDescriptors, {
     _listeners: {
       writable: true
@@ -262,8 +264,7 @@ var Eventful = function () {
       dom = document.getElementById(dom);
     }
 
-    Object.defineProperties(dom, domPropertyDescriptors);
-    return dom;
+    return Object.defineProperties(dom, domPropertyDescriptors).initialize();
   }
 
   return {

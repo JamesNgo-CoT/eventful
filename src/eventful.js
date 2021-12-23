@@ -31,9 +31,11 @@ const Eventful = (() => {
 					this._events[event] = [];
 				}
 
-				this._events[event].push({ handler, owner });
+				const item = { handler };
 
 				if (owner) {
+					item.owner = owner;
+
 					if (!owner._listeningTo[this._id]) {
 						owner._listeningTo[this._id] = {
 							ref: this,
@@ -43,6 +45,8 @@ const Eventful = (() => {
 
 					owner._listeningTo[this._id].handlers.push(handler);
 				}
+
+				this._events[event].push(item);
 
 				return this;
 			}
@@ -154,8 +158,8 @@ const Eventful = (() => {
 	};
 
 	function factory(obj = {}) {
-		Object.defineProperties(obj, propertyDescriptors);
-		return obj;
+		return Object.defineProperties(obj, propertyDescriptors)
+			.initialize();
 	}
 
 	const Class = class {
@@ -163,7 +167,7 @@ const Eventful = (() => {
 			this.initialize();
 		}
 	};
-	factory(Class.prototype);
+	Object.defineProperties(Class.prototype, propertyDescriptors);
 
 	/* @if TARGET="NODEJS" **
 	return {
@@ -233,8 +237,8 @@ const Eventful = (() => {
 			dom = document.getElementById(dom);
 		}
 
-		Object.defineProperties(dom, domPropertyDescriptors);
-		return dom;
+		return Object.defineProperties(dom, domPropertyDescriptors)
+			.initialize();
 	}
 
 	return {
