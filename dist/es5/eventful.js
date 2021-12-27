@@ -32,7 +32,7 @@ var Eventful = function () {
     },
     initialize: {
       enumerable: true,
-      value: function value() {
+      value: function initialize() {
         this._id = "eventful".concat(idCounter++);
         this._events = {};
         this._listeningTo = {};
@@ -41,7 +41,7 @@ var Eventful = function () {
     },
     on: {
       enumerable: true,
-      value: function value(event, handler, owner) {
+      value: function on(event, handler, owner) {
         if (!this._events[event]) {
           this._events[event] = [];
         }
@@ -70,7 +70,7 @@ var Eventful = function () {
     },
     off: {
       enumerable: true,
-      value: function value(event, handler, owner) {
+      value: function off(event, handler, owner) {
         var _this = this;
 
         var process = function process(key) {
@@ -124,7 +124,7 @@ var Eventful = function () {
     },
     trigger: {
       enumerable: true,
-      value: function value(event) {
+      value: function trigger(event) {
         if (this._events[event]) {
           var handlers = _toConsumableArray(this._events[event].map(function (_ref) {
             var handler = _ref.handler;
@@ -150,14 +150,14 @@ var Eventful = function () {
     },
     listenTo: {
       enumerable: true,
-      value: function value(other, event, handler) {
+      value: function listenTo(other, event, handler) {
         other.on(event, handler, this);
         return this;
       }
     },
     stopListeningTo: {
       enumerable: true,
-      value: function value(other, event, handler) {
+      value: function stopListeningTo(other, event, handler) {
         var _this2 = this;
 
         var process = function process(key) {
@@ -180,7 +180,7 @@ var Eventful = function () {
     },
     terminate: {
       enumerable: true,
-      value: function value() {
+      value: function terminate() {
         this.off();
         this.stopListeningTo();
       }
