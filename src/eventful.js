@@ -162,18 +162,18 @@ const Eventful = (() => {
 			.initialize();
 	}
 
-	const Class = class {
+	const Eventful = class {
 		constructor() {
 			this.initialize();
 		}
 	};
-	Object.defineProperties(Class.prototype, propertyDescriptors);
+	Object.defineProperties(Eventful.prototype, propertyDescriptors);
 
 	/* @if TARGET="NODEJS" **
 	return {
 		propertyDescriptors,
 		factory,
-		Class
+		Class: Eventful
 	};
 	/* @endif */
 	/* @if TARGET="BROWSER" */
@@ -244,7 +244,7 @@ const Eventful = (() => {
 	return {
 		propertyDescriptors,
 		factory,
-		Class,
+		Class: Eventful,
 		domPropertyDescriptors,
 		domFactory
 	};

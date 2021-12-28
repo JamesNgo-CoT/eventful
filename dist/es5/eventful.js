@@ -192,13 +192,13 @@ var Eventful = function () {
     return Object.defineProperties(obj, propertyDescriptors).initialize();
   }
 
-  var Class = /*#__PURE__*/_createClass(function Class() {
-    _classCallCheck(this, Class);
+  var Eventful = /*#__PURE__*/_createClass(function Eventful() {
+    _classCallCheck(this, Eventful);
 
     this.initialize();
   });
 
-  Object.defineProperties(Class.prototype, propertyDescriptors);
+  Object.defineProperties(Eventful.prototype, propertyDescriptors);
   var domPropertyDescriptors = Object.assign({}, propertyDescriptors, {
     _listeners: {
       writable: true
@@ -270,7 +270,7 @@ var Eventful = function () {
   return {
     propertyDescriptors: propertyDescriptors,
     factory: factory,
-    Class: Class,
+    Class: Eventful,
     domPropertyDescriptors: domPropertyDescriptors,
     domFactory: domFactory
   };

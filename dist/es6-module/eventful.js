@@ -162,12 +162,12 @@ const Eventful = (() => {
 			.initialize();
 	}
 
-	const Class = class {
+	const Eventful = class {
 		constructor() {
 			this.initialize();
 		}
 	};
-	Object.defineProperties(Class.prototype, propertyDescriptors);
+	Object.defineProperties(Eventful.prototype, propertyDescriptors);
 
 	const domPropertyDescriptors = Object.assign({}, propertyDescriptors, {
 		_listeners: {
@@ -236,7 +236,7 @@ const Eventful = (() => {
 	return {
 		propertyDescriptors,
 		factory,
-		Class,
+		Class: Eventful,
 		domPropertyDescriptors,
 		domFactory
 	};
