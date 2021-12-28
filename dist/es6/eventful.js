@@ -15,7 +15,7 @@ const Eventful = (() => {
 
 		initialize: {
 			enumerable: true,
-			value() {
+			value: function initialize() {
 				this._id = `eventful${idCounter++}`;
 				this._events = {};
 				this._listeningTo = {};
@@ -26,7 +26,7 @@ const Eventful = (() => {
 
 		on: {
 			enumerable: true,
-			value(event, handler, owner) {
+			value: function on(event, handler, owner) {
 				if (!this._events[event]) {
 					this._events[event] = [];
 				}
@@ -54,7 +54,7 @@ const Eventful = (() => {
 
 		off: {
 			enumerable: true,
-			value(event, handler, owner) {
+			value: function off(event, handler, owner) {
 				const process = (key) => {
 					let index = 0;
 					while (index < this._events[key].length) {
@@ -101,7 +101,7 @@ const Eventful = (() => {
 
 		trigger: {
 			enumerable: true,
-			value(event, ...args) {
+			value: function trigger(event, ...args) {
 				if (this._events[event]) {
 					const handlers = [...this._events[event].map(({ handler }) => handler)];
 					for (let index = 0, length = handlers.length; index < length; index++) {
@@ -119,7 +119,7 @@ const Eventful = (() => {
 
 		listenTo: {
 			enumerable: true,
-			value(other, event, handler) {
+			value: function listenTo(other, event, handler) {
 				other.on(event, handler, this);
 
 				return this;
@@ -128,7 +128,7 @@ const Eventful = (() => {
 
 		stopListeningTo: {
 			enumerable: true,
-			value(other, event, handler) {
+			value: function stopListeningTo(other, event, handler) {
 				const process = (key) => {
 					const { ref } = this._listeningTo[key];
 					ref.off(event, handler, this);
@@ -150,7 +150,7 @@ const Eventful = (() => {
 
 		terminate: {
 			enumerable: true,
-			value() {
+			value: function terminate() {
 				this.off();
 				this.stopListeningTo();
 			}
@@ -162,12 +162,12 @@ const Eventful = (() => {
 			.initialize();
 	}
 
-	const Class = class {
+	const Eventful = class {
 		constructor() {
 			this.initialize();
 		}
 	};
-	Object.defineProperties(Class.prototype, propertyDescriptors);
+	Object.defineProperties(Eventful.prototype, propertyDescriptors);
 
 	const domPropertyDescriptors = Object.assign({}, propertyDescriptors, {
 		_listeners: {
@@ -236,7 +236,7 @@ const Eventful = (() => {
 	return {
 		propertyDescriptors,
 		factory,
-		Class,
+		Class: Eventful,
 		domPropertyDescriptors,
 		domFactory
 	};

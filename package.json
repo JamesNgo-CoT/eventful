@@ -1,6 +1,6 @@
 {
   "name": "eventful",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -35,6 +35,6 @@
     "gulp-sourcemaps": "^3.0.0",
     "gulp-terser": "^2.1.0",
     "gulp-uglify": "^3.0.2",
-    "js-tester": "github:JamesRobertHugginsNgo/js-tester#5.1.0"
+    "js-tester": "github:JamesRobertHugginsNgo/js-tester#5.1.2"
   }
 }
