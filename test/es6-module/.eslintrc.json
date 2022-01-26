@@ -4,6 +4,10 @@
         "commonjs": false,
         "node": false
     },
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module"
+    },
     "rules": {
     }
 }
