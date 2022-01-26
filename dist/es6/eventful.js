@@ -1,5 +1,7 @@
+/* global IdSequence */
 const Eventful = (() => {
-	let idCounter = 0;
+	const { next: nextId } = IdSequence;
+
 	const propertyDescriptors = {
 		_id: {
 			writable: true
@@ -16,7 +18,7 @@ const Eventful = (() => {
 		initialize: {
 			enumerable: true,
 			value: function initialize() {
-				this._id = `eventful${idCounter++}`;
+				this._id = nextId('eventful');
 				this._events = {};
 				this._listeningTo = {};
 
@@ -168,7 +170,6 @@ const Eventful = (() => {
 		}
 	};
 	Object.defineProperties(Eventful.prototype, propertyDescriptors);
-
 	const domPropertyDescriptors = Object.assign({}, propertyDescriptors, {
 		_listeners: {
 			writable: true
@@ -233,13 +234,7 @@ const Eventful = (() => {
 			.initialize();
 	}
 
-	return {
-		propertyDescriptors,
-		factory,
-		Class: Eventful,
-		domPropertyDescriptors,
-		domFactory
-	};
+	return { propertyDescriptors, factory, Eventful, domPropertyDescriptors, domFactory };
 })();
 
 /* exported Eventful */

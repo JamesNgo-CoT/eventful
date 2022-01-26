@@ -1,268 +1,262 @@
+/* @if MODULE="COMMONJS" */
+const { next: nextId } = require('id-sequence');
+/* @endif */
+/* @if MODULE="ES6" **
+import { next as nextId } from './id-sequence.min.js';
+/* @endif */
+/* @if MODULE=null **
+/* global IdSequence */
+/* @endif */
+/* @if MODULE=null **
+
 const Eventful = (() => {
-	let idCounter = 0;
-	const propertyDescriptors = {
-		_id: {
-			writable: true
-		},
+const { next: nextId } = IdSequence;
+/* @endif */
 
-		_events: {
-			writable: true,
-		},
+const propertyDescriptors = {
+	_id: {
+		writable: true
+	},
 
-		_listeningTo: {
-			writable: true,
-		},
+	_events: {
+		writable: true,
+	},
 
-		initialize: {
-			enumerable: true,
-			value: function initialize() {
-				this._id = `eventful${idCounter++}`;
-				this._events = {};
-				this._listeningTo = {};
+	_listeningTo: {
+		writable: true,
+	},
 
-				return this;
+	initialize: {
+		enumerable: true,
+		value: function initialize() {
+			this._id = nextId('eventful');
+			this._events = {};
+			this._listeningTo = {};
+
+			return this;
+		}
+	},
+
+	on: {
+		enumerable: true,
+		value: function on(event, handler, owner) {
+			if (!this._events[event]) {
+				this._events[event] = [];
 			}
-		},
 
-		on: {
-			enumerable: true,
-			value: function on(event, handler, owner) {
-				if (!this._events[event]) {
-					this._events[event] = [];
+			const item = { handler };
+
+			if (owner) {
+				item.owner = owner;
+
+				if (!owner._listeningTo[this._id]) {
+					owner._listeningTo[this._id] = {
+						ref: this,
+						handlers: []
+					};
 				}
 
-				const item = { handler };
-
-				if (owner) {
-					item.owner = owner;
-
-					if (!owner._listeningTo[this._id]) {
-						owner._listeningTo[this._id] = {
-							ref: this,
-							handlers: []
-						};
-					}
-
-					owner._listeningTo[this._id].handlers.push(handler);
-				}
-
-				this._events[event].push(item);
-
-				return this;
+				owner._listeningTo[this._id].handlers.push(handler);
 			}
-		},
 
-		off: {
-			enumerable: true,
-			value: function off(event, handler, owner) {
-				const process = (key) => {
-					let index = 0;
-					while (index < this._events[key].length) {
-						const { handler: thisHandler, owner: thisOwner } = this._events[key][index];
-						if ((!handler || handler === thisHandler) && (!owner || owner === thisOwner)) {
-							if (thisOwner && thisOwner._listeningTo && thisOwner._listeningTo[this._id]) {
-								const handlerIndex = thisOwner._listeningTo[this._id].handlers.indexOf(thisHandler);
-								if (handlerIndex !== -1) {
-									thisOwner._listeningTo[this._id].handlers.splice(handlerIndex, 1);
-									if (thisOwner._listeningTo[this._id].handlers.length === 0) {
-										delete thisOwner._listeningTo[this._id];
-									}
+			this._events[event].push(item);
+
+			return this;
+		}
+	},
+
+	off: {
+		enumerable: true,
+		value: function off(event, handler, owner) {
+			const process = (key) => {
+				let index = 0;
+				while (index < this._events[key].length) {
+					const { handler: thisHandler, owner: thisOwner } = this._events[key][index];
+					if ((!handler || handler === thisHandler) && (!owner || owner === thisOwner)) {
+						if (thisOwner && thisOwner._listeningTo && thisOwner._listeningTo[this._id]) {
+							const handlerIndex = thisOwner._listeningTo[this._id].handlers.indexOf(thisHandler);
+							if (handlerIndex !== -1) {
+								thisOwner._listeningTo[this._id].handlers.splice(handlerIndex, 1);
+								if (thisOwner._listeningTo[this._id].handlers.length === 0) {
+									delete thisOwner._listeningTo[this._id];
 								}
 							}
-
-							this._events[key].splice(index, 1);
-
-							if (event && handler) {
-								break;
-							}
-						} else {
-							index++;
 						}
-					}
 
-					if (this._events[key].length === 0) {
-						delete this._events[key];
-					}
-				};
+						this._events[key].splice(index, 1);
 
-				if (event) {
-					if (this._events[event]) {
-						process(event);
-					}
-				} else {
-					for (const key in this._events) {
-						process(key);
+						if (event && handler) {
+							break;
+						}
+					} else {
+						index++;
 					}
 				}
 
-				return this;
-			}
-		},
+				if (this._events[key].length === 0) {
+					delete this._events[key];
+				}
+			};
 
-		trigger: {
-			enumerable: true,
-			value: function trigger(event, ...args) {
+			if (event) {
 				if (this._events[event]) {
-					const handlers = [...this._events[event].map(({ handler }) => handler)];
-					for (let index = 0, length = handlers.length; index < length; index++) {
-						const handler = handlers[index];
-						const returnValue = handler.call(this, ...args);
-						if (returnValue && returnValue.off) {
-							this.off(event, handler);
-						}
-					}
+					process(event);
 				}
-
-				return this;
-			}
-		},
-
-		listenTo: {
-			enumerable: true,
-			value: function listenTo(other, event, handler) {
-				other.on(event, handler, this);
-
-				return this;
-			}
-		},
-
-		stopListeningTo: {
-			enumerable: true,
-			value: function stopListeningTo(other, event, handler) {
-				const process = (key) => {
-					const { ref } = this._listeningTo[key];
-					ref.off(event, handler, this);
-				};
-
-				if (other) {
-					if (this._listeningTo[other._id]) {
-						process(other._id);
-					}
-				} else {
-					for (const key in this._listeningTo) {
-						process(key);
-					}
+			} else {
+				for (const key in this._events) {
+					process(key);
 				}
-
-				return this;
 			}
-		},
 
-		terminate: {
-			enumerable: true,
-			value: function terminate() {
-				this.off();
-				this.stopListeningTo();
-			}
+			return this;
 		}
-	};
+	},
 
-	function factory(obj = {}) {
-		return Object.defineProperties(obj, propertyDescriptors)
-			.initialize();
+	trigger: {
+		enumerable: true,
+		value: function trigger(event, ...args) {
+			if (this._events[event]) {
+				const handlers = [...this._events[event].map(({ handler }) => handler)];
+				for (let index = 0, length = handlers.length; index < length; index++) {
+					const handler = handlers[index];
+					const returnValue = handler.call(this, ...args);
+					if (returnValue && returnValue.off) {
+						this.off(event, handler);
+					}
+				}
+			}
+
+			return this;
+		}
+	},
+
+	listenTo: {
+		enumerable: true,
+		value: function listenTo(other, event, handler) {
+			other.on(event, handler, this);
+
+			return this;
+		}
+	},
+
+	stopListeningTo: {
+		enumerable: true,
+		value: function stopListeningTo(other, event, handler) {
+			const process = (key) => {
+				const { ref } = this._listeningTo[key];
+				ref.off(event, handler, this);
+			};
+
+			if (other) {
+				if (this._listeningTo[other._id]) {
+					process(other._id);
+				}
+			} else {
+				for (const key in this._listeningTo) {
+					process(key);
+				}
+			}
+
+			return this;
+		}
+	},
+
+	terminate: {
+		enumerable: true,
+		value: function terminate() {
+			this.off();
+			this.stopListeningTo();
+		}
+	}
+};
+
+function factory(obj = {}) {
+	return Object.defineProperties(obj, propertyDescriptors)
+		.initialize();
+}
+
+const Eventful = class {
+	constructor() {
+		this.initialize();
+	}
+};
+Object.defineProperties(Eventful.prototype, propertyDescriptors);
+/* @if TARGET="BROWSER" **
+
+const domPropertyDescriptors = Object.assign({}, propertyDescriptors, {
+	_listeners: {
+		writable: true
+	},
+
+	initialize: {
+		enumerable: true,
+		value() {
+			propertyDescriptors.initialize.value.call(this);
+			this._listeners = {};
+		}
+	},
+
+	on: {
+		value(event, handler, owner) {
+			propertyDescriptors.on.value.call(this, event, handler, owner);
+
+			if (!this._listeners[event]) {
+				this.addEventListener(event, this._listeners[event] = (...args) => {
+					this.trigger(event, ...args);
+				});
+			}
+
+			return this;
+		}
+	},
+
+	off: {
+		value(event, handler, owner) {
+			const events = [];
+			if (event) {
+				if (this._events[event]) {
+					events.push(event);
+				}
+			} else {
+				for (const key in this._events) {
+					events.push(key);
+				}
+			}
+
+			propertyDescriptors.off.value.call(this, event, handler, owner);
+
+			for (let index = 0, length = events.length; index < length; index++) {
+				const event = events[index];
+				if (this._listeners[event] && !this._events[event]) {
+					this.removeEventListener(event, this._listeners[event]);
+					delete this._listeners[event];
+				}
+			}
+
+			return this;
+		}
+	}
+});
+
+function domFactory(dom) {
+	if (typeof dom === 'string') {
+		dom = document.getElementById(dom);
 	}
 
-	const Eventful = class {
-		constructor() {
-			this.initialize();
-		}
-	};
-	Object.defineProperties(Eventful.prototype, propertyDescriptors);
-
-	/* @if TARGET="NODEJS" **
-	return {
-		propertyDescriptors,
-		factory,
-		Class: Eventful
-	};
-	/* @endif */
-	/* @if TARGET="BROWSER" */
-	const domPropertyDescriptors = Object.assign({}, propertyDescriptors, {
-		_listeners: {
-			writable: true
-		},
-
-		initialize: {
-			enumerable: true,
-			value() {
-				propertyDescriptors.initialize.value.call(this);
-				this._listeners = {};
-			}
-		},
-
-		on: {
-			value(event, handler, owner) {
-				propertyDescriptors.on.value.call(this, event, handler, owner);
-
-				if (!this._listeners[event]) {
-					this.addEventListener(event, this._listeners[event] = (...args) => {
-						this.trigger(event, ...args);
-					});
-				}
-
-				return this;
-			}
-		},
-
-		off: {
-			value(event, handler, owner) {
-				const events = [];
-				if (event) {
-					if (this._events[event]) {
-						events.push(event);
-					}
-				} else {
-					for (const key in this._events) {
-						events.push(key);
-					}
-				}
-
-				propertyDescriptors.off.value.call(this, event, handler, owner);
-
-				for (let index = 0, length = events.length; index < length; index++) {
-					const event = events[index];
-					if (this._listeners[event] && !this._events[event]) {
-						this.removeEventListener(event, this._listeners[event]);
-						delete this._listeners[event];
-					}
-				}
-
-				return this;
-			}
-		}
-	});
-
-	function domFactory(dom) {
-		if (typeof dom === 'string') {
-			dom = document.getElementById(dom);
-		}
-
-		return Object.defineProperties(dom, domPropertyDescriptors)
-			.initialize();
-	}
-
-	return {
-		propertyDescriptors,
-		factory,
-		Class: Eventful,
-		domPropertyDescriptors,
-		domFactory
-	};
-	/* @endif */
-})();
+	return Object.defineProperties(dom, domPropertyDescriptors)
+		.initialize();
+}
+/* @endif */
 
 /* @if MODULE="COMMONJS" */
-module.exports = Eventful;
+module.exports = { propertyDescriptors, factory, Eventful };
 /* @endif */
-/* @if MODULE!="ES6" **
+/* @if MODULE="ES6" **
+export { propertyDescriptors, factory, Eventful, domPropertyDescriptors, domFactory };
+/* @endif */
+/* @if MODULE=null **
+return { propertyDescriptors, factory, Eventful, domPropertyDescriptors, domFactory };
+})();
+
 /* exported Eventful */
-/* @endif */
-/* @if TARGET="BROWSER" && MODULE="ES6" **
-export const {
-	propertyDescriptors,
-	factory,
-	Class,
-	domPropertyDescriptors,
-	domFactory
-} = Eventful;
 /* @endif */
