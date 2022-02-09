@@ -1,4 +1,6 @@
-const { next: nextId } = require('id-sequence');
+/* global IdSequence */
+const Eventful = (() => {
+const { next: nextId } = IdSequence;
 
 const methods = {
 	initialize() {
@@ -89,7 +91,7 @@ const methods = {
 	},
 	stopListeningTo(other, event, callback) {
 		const process2 = (id, event) => {
-			const array = [...this._listeningTo[id][event]];
+			const array = this._listeningTo[id][event];
 			for (let index = 0, length = array.length; index < length; index++) {
 				const item = array[index];
 				item.other.off(event, callback, this);
@@ -160,5 +162,64 @@ const propertyDescriptors = {
 	}
 };
 
-module.exports = { methods, propertyDescriptors };
+const targetMethods = Object.assign({}, methods, {
+	initialize(target = this) {
+		methods.initialize.call(this);
+		this._target = target;
+		this._listeners = {};
+		return this;
+	},
+	on(event, callback, owner) {
+		methods.on.call(this, event, callback, owner);
+		if (!this._listeners[event]) {
+			this._listeners[event] = (...args) => void this.trigger(event, ...args);
+			this._target.addEventListener(event, this._listeners[event]);
+		}
+		return this;
+	},
+	off(event, callback, owner) {
+		methods.off.call(this, event, callback, owner);
+		const process = (event) => {
+			this._target.removeEventListener(event, this._listeners[event]);
+			this._listeners[event] = null;
+		};
+		if (event) {
+			if (this._listeners[event] && (!this._events[event] || this._events[event].length === 0)) {
+				process(event);
+			}
+		} else {
+			for (const key in this._listeners) {
+				if (!this._events[event] || this._events[event].length === 0) {
+					process(key);
+				}
+			}
+		}
+		return this;
+	}
+});
 
+const targetPropertyDescriptors = Object.assign({}, propertyDescriptors, {
+	_target: {
+		writable: true
+	},
+	_listeners: {
+		writable: true
+	},
+	initialize: {
+		enumerable: true,
+		value: targetMethods.initialize
+	},
+	on: {
+		enumerable: true,
+		value: targetMethods.on
+	},
+	off: {
+		enumerable: true,
+		value: targetMethods.off
+	}
+});
+
+return { methods, propertyDescriptors, targetMethods, targetPropertyDescriptors };
+})();
+
+/* exported Eventful */
