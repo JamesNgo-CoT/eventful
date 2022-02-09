@@ -142,7 +142,7 @@ var Eventful = function () {
       var _this2 = this;
 
       var process2 = function process2(id, event) {
-        var array = _this2._listeningTo[id][event];
+        var array = _toConsumableArray(_this2._listeningTo[id][event]);
 
         for (var index = 0, length = array.length; index < length; index++) {
           var item = array[index];

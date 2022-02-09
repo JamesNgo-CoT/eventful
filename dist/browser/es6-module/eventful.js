@@ -89,7 +89,7 @@ const methods = {
 	},
 	stopListeningTo(other, event, callback) {
 		const process2 = (id, event) => {
-			const array = this._listeningTo[id][event];
+			const array = [...this._listeningTo[id][event]];
 			for (let index = 0, length = array.length; index < length; index++) {
 				const item = array[index];
 				item.other.off(event, callback, this);
