@@ -23,6 +23,7 @@ const methods = {
 	terminate() {
 		this.off();
 		this.stopListeningTo();
+		this.trigger('terminate');
 	},
 	on(event, callback, owner) {
 		if (!this._events[event]) {
