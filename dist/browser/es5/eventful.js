@@ -26,6 +26,7 @@ var Eventful = function () {
     terminate: function terminate() {
       this.off();
       this.stopListeningTo();
+      this.trigger('terminate');
     },
     on: function on(event, callback, owner) {
       if (!this._events[event]) {
@@ -216,11 +217,9 @@ var Eventful = function () {
       value: methods.stopListeningTo
     }
   };
-  var targetMethods = Object.assign({}, methods, {
+  var eventTargetMethods = Object.assign({}, methods, {
     initialize: function initialize() {
-      var target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this;
       methods.initialize.call(this);
-      this._target = target;
       this._listeners = {};
       return this;
     },
@@ -238,7 +237,7 @@ var Eventful = function () {
           return void _this3.trigger.apply(_this3, [event].concat(args));
         };
 
-        this._target.addEventListener(event, this._listeners[event]);
+        this.addEventListener(event, this._listeners[event]);
       }
 
       return this;
@@ -249,7 +248,7 @@ var Eventful = function () {
       methods.off.call(this, event, callback, owner);
 
       var process = function process(event) {
-        _this4._target.removeEventListener(event, _this4._listeners[event]);
+        _this4.removeEventListener(event, _this4._listeners[event]);
 
         _this4._listeners[event] = null;
       };
@@ -269,31 +268,38 @@ var Eventful = function () {
       return this;
     }
   });
-  var targetPropertyDescriptors = Object.assign({}, propertyDescriptors, {
-    _target: {
-      writable: true
-    },
+  var eventTargetPropertyDescriptors = Object.assign({}, propertyDescriptors, {
     _listeners: {
       writable: true
     },
     initialize: {
       enumerable: true,
-      value: targetMethods.initialize
+      value: eventTargetMethods.initialize
     },
     on: {
       enumerable: true,
-      value: targetMethods.on
+      value: eventTargetMethods.on
     },
     off: {
       enumerable: true,
-      value: targetMethods.off
+      value: eventTargetMethods.off
     }
   });
+
+  function factory(obj) {
+    if (obj instanceof EventTarget) {
+      return Object.defineProperties(obj, eventTargetPropertyDescriptors);
+    }
+
+    return Object.defineProperties(obj, propertyDescriptors);
+  }
+
   return {
     methods: methods,
     propertyDescriptors: propertyDescriptors,
-    targetMethods: targetMethods,
-    targetPropertyDescriptors: targetPropertyDescriptors
+    eventTargetMethods: eventTargetMethods,
+    eventTargetPropertyDescriptors: eventTargetPropertyDescriptors,
+    factory: factory
   };
 }();
 /* exported Eventful */

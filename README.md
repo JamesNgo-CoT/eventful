@@ -1,11 +1,11 @@
 # eventful
 
-Version 4.1.0
+Version 5.0.0
 
-Adds event handlers to JavaScript objects.
+Provides eventful methods, property descriptor and factory to add event handlers on any JavaScript objects.
 
 ## Installation
 
 ``` console
-npm install https://github.com/JamesRobertHugginsNgo/eventful.git#4.1.0
+npm install https://github.com/JamesRobertHugginsNgo/eventful.git#5.0.0
 ```
