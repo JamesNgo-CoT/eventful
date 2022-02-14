@@ -12,6 +12,7 @@ const methods = {
 	terminate() {
 		this.off();
 		this.stopListeningTo();
+		this.trigger('terminate');
 	},
 	on(event, callback, owner) {
 		if (!this._events[event]) {
@@ -162,10 +163,9 @@ const propertyDescriptors = {
 	}
 };
 
-const targetMethods = Object.assign({}, methods, {
-	initialize(target = this) {
+const eventTargetMethods = Object.assign({}, methods, {
+	initialize() {
 		methods.initialize.call(this);
-		this._target = target;
 		this._listeners = {};
 		return this;
 	},
@@ -173,14 +173,14 @@ const targetMethods = Object.assign({}, methods, {
 		methods.on.call(this, event, callback, owner);
 		if (!this._listeners[event]) {
 			this._listeners[event] = (...args) => void this.trigger(event, ...args);
-			this._target.addEventListener(event, this._listeners[event]);
+			this.addEventListener(event, this._listeners[event]);
 		}
 		return this;
 	},
 	off(event, callback, owner) {
 		methods.off.call(this, event, callback, owner);
 		const process = (event) => {
-			this._target.removeEventListener(event, this._listeners[event]);
+			this.removeEventListener(event, this._listeners[event]);
 			this._listeners[event] = null;
 		};
 		if (event) {
@@ -198,28 +198,39 @@ const targetMethods = Object.assign({}, methods, {
 	}
 });
 
-const targetPropertyDescriptors = Object.assign({}, propertyDescriptors, {
-	_target: {
-		writable: true
-	},
+const eventTargetPropertyDescriptors = Object.assign({}, propertyDescriptors, {
 	_listeners: {
 		writable: true
 	},
 	initialize: {
 		enumerable: true,
-		value: targetMethods.initialize
+		value: eventTargetMethods.initialize
 	},
 	on: {
 		enumerable: true,
-		value: targetMethods.on
+		value: eventTargetMethods.on
 	},
 	off: {
 		enumerable: true,
-		value: targetMethods.off
+		value: eventTargetMethods.off
 	}
 });
 
-return { methods, propertyDescriptors, targetMethods, targetPropertyDescriptors };
+function factory(obj) {
+	if (obj instanceof EventTarget) {
+		return Object.defineProperties(obj, eventTargetPropertyDescriptors);
+	}
+
+	return Object.defineProperties(obj, propertyDescriptors);
+}
+
+return {
+	methods,
+	propertyDescriptors,
+	eventTargetMethods,
+	eventTargetPropertyDescriptors,
+	factory
+};
 })();
 
 /* exported Eventful */
