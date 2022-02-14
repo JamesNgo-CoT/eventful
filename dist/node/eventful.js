@@ -10,6 +10,7 @@ const methods = {
 	terminate() {
 		this.off();
 		this.stopListeningTo();
+		this.trigger('terminate');
 	},
 	on(event, callback, owner) {
 		if (!this._events[event]) {
@@ -160,5 +161,12 @@ const propertyDescriptors = {
 	}
 };
 
-module.exports = { methods, propertyDescriptors };
+function factory(obj) {
+	return Object.defineProperties(obj, propertyDescriptors);
+}
 
+module.exports = {
+	methods,
+	propertyDescriptors,
+	factory
+};
