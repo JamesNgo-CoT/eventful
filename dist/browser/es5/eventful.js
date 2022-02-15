@@ -219,9 +219,10 @@ var Eventful = function () {
   };
   var eventTargetMethods = Object.assign({}, methods, {
     initialize: function initialize() {
-      methods.initialize.call(this);
+      var eventTarget = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this;
+      this._eventTarget = eventTarget;
       this._listeners = {};
-      return this;
+      return methods.initialize.call(this);
     },
     on: function on(event, callback, owner) {
       var _this3 = this;
@@ -237,7 +238,7 @@ var Eventful = function () {
           return void _this3.trigger.apply(_this3, [event].concat(args));
         };
 
-        this.addEventListener(event, this._listeners[event]);
+        this._eventTarget.addEventListener(event, this._listeners[event]);
       }
 
       return this;
@@ -248,7 +249,7 @@ var Eventful = function () {
       methods.off.call(this, event, callback, owner);
 
       var process = function process(event) {
-        _this4.removeEventListener(event, _this4._listeners[event]);
+        _this4._eventTarget.removeEventListener(event, _this4._listeners[event]);
 
         _this4._listeners[event] = null;
       };

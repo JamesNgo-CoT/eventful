@@ -162,23 +162,23 @@ const propertyDescriptors = {
 };
 
 const eventTargetMethods = Object.assign({}, methods, {
-	initialize() {
-		methods.initialize.call(this);
+	initialize(eventTarget = this) {
+		this._eventTarget = eventTarget;
 		this._listeners = {};
-		return this;
+		return methods.initialize.call(this);
 	},
 	on(event, callback, owner) {
 		methods.on.call(this, event, callback, owner);
 		if (!this._listeners[event]) {
 			this._listeners[event] = (...args) => void this.trigger(event, ...args);
-			this.addEventListener(event, this._listeners[event]);
+			this._eventTarget.addEventListener(event, this._listeners[event]);
 		}
 		return this;
 	},
 	off(event, callback, owner) {
 		methods.off.call(this, event, callback, owner);
 		const process = (event) => {
-			this.removeEventListener(event, this._listeners[event]);
+			this._eventTarget.removeEventListener(event, this._listeners[event]);
 			this._listeners[event] = null;
 		};
 		if (event) {
