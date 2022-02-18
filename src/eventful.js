@@ -111,13 +111,13 @@ const methods = {
 			}
 		};
 		const process1 = (id) => {
-			const listentingTo = this._listeningTo[id];
+			const listeningTo = this._listeningTo[id];
 			if (event) {
-				if (listentingTo[event]) {
+				if (listeningTo[event]) {
 					process2(id, event);
 				}
 			} else {
-				for (const key in listentingTo) {
+				for (const key in listeningTo) {
 					process2(id, key);
 				}
 			}
@@ -150,7 +150,9 @@ const propertyDescriptors = {
 	},
 	initialize: {
 		enumerable: true,
-		value: methods.initialize
+		value() {
+			return methods.initialize.call(this);
+		}
 	},
 	terminate: {
 		enumerable: true,
@@ -219,7 +221,9 @@ const eventTargetPropertyDescriptors = Object.assign({}, propertyDescriptors, {
 	},
 	initialize: {
 		enumerable: true,
-		value: eventTargetMethods.initialize
+		value() {
+			return eventTargetMethods.initialize.call(this);
+		}
 	},
 	on: {
 		enumerable: true,
@@ -234,7 +238,7 @@ const eventTargetPropertyDescriptors = Object.assign({}, propertyDescriptors, {
 /* @endif */
 function wrap(context) {
 	/* @if TARGET="BROWSER_ES5" || TARGET="BROWSER_ES6" || TARGET="BROWSER_ES6_MODULE" **
-	if (obj instanceof EventTarget) {
+	if (context instanceof EventTarget) {
 		return {
 			...eventTargetMethods
 		}.initialize(context);
@@ -246,9 +250,9 @@ function wrap(context) {
 	}.initialize(context);
 }
 
-function factory(context) {
+function implement(context) {
 	/* @if TARGET="BROWSER_ES5" || TARGET="BROWSER_ES6" || TARGET="BROWSER_ES6_MODULE" **
-	if (obj instanceof EventTarget) {
+	if (context instanceof EventTarget) {
 		return Object.defineProperties(context, eventTargetPropertyDescriptors)
 			.initialize();
 	}
@@ -263,7 +267,7 @@ module.exports = {
 	methods,
 	propertyDescriptors,
 	wrap,
-	factory
+	implement
 };
 /* @endif */
 /* @if TARGET="BROWSER_ES6_MODULE" **
@@ -273,7 +277,7 @@ export {
 	eventTargetMethods,
 	eventTargetPropertyDescriptors,
 	wrap,
-	factory
+	implement
 };
 /* @endif */
 /* @if TARGET="BROWSER_ES5" || TARGET="BROWSER_ES6" **
@@ -283,7 +287,7 @@ return {
 	eventTargetMethods,
 	eventTargetPropertyDescriptors,
 	wrap,
-	factory
+	implement
 };
 })();
 

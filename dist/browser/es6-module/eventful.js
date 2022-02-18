@@ -1,7 +1,8 @@
 import { next as nextId } from './id-sequence.min.js';
 
 const methods = {
-	initialize() {
+	initialize(context = this) {
+		this._context = context;
 		this._id = nextId('eventful-');
 		this._events = {};
 		this._listeningTo = {};
@@ -97,13 +98,13 @@ const methods = {
 			}
 		};
 		const process1 = (id) => {
-			const listentingTo = this._listeningTo[id];
+			const listeningTo = this._listeningTo[id];
 			if (event) {
-				if (listentingTo[event]) {
+				if (listeningTo[event]) {
 					process2(id, event);
 				}
 			} else {
-				for (const key in listentingTo) {
+				for (const key in listeningTo) {
 					process2(id, key);
 				}
 			}
@@ -122,6 +123,9 @@ const methods = {
 };
 
 const propertyDescriptors = {
+	_context: {
+		writable: true
+	},
 	_id: {
 		writable: true
 	},
@@ -133,7 +137,9 @@ const propertyDescriptors = {
 	},
 	initialize: {
 		enumerable: true,
-		value: methods.initialize
+		value() {
+			return methods.initialize.call(this);
+		}
 	},
 	terminate: {
 		enumerable: true,
@@ -162,23 +168,22 @@ const propertyDescriptors = {
 };
 
 const eventTargetMethods = Object.assign({}, methods, {
-	initialize(eventTarget = this) {
-		this._eventTarget = eventTarget;
+	initialize(context) {
 		this._listeners = {};
-		return methods.initialize.call(this);
+		return methods.initialize.call(this, context);
 	},
 	on(event, callback, owner) {
 		methods.on.call(this, event, callback, owner);
 		if (!this._listeners[event]) {
 			this._listeners[event] = (...args) => void this.trigger(event, ...args);
-			this._eventTarget.addEventListener(event, this._listeners[event]);
+			this._context.addEventListener(event, this._listeners[event]);
 		}
 		return this;
 	},
 	off(event, callback, owner) {
 		methods.off.call(this, event, callback, owner);
 		const process = (event) => {
-			this._eventTarget.removeEventListener(event, this._listeners[event]);
+			this._context.removeEventListener(event, this._listeners[event]);
 			this._listeners[event] = null;
 		};
 		if (event) {
@@ -202,7 +207,9 @@ const eventTargetPropertyDescriptors = Object.assign({}, propertyDescriptors, {
 	},
 	initialize: {
 		enumerable: true,
-		value: eventTargetMethods.initialize
+		value() {
+			return eventTargetMethods.initialize.call(this);
+		}
 	},
 	on: {
 		enumerable: true,
@@ -214,12 +221,26 @@ const eventTargetPropertyDescriptors = Object.assign({}, propertyDescriptors, {
 	}
 });
 
-function factory(obj) {
-	if (obj instanceof EventTarget) {
-		return Object.defineProperties(obj, eventTargetPropertyDescriptors);
+function wrap(context) {
+	if (context instanceof EventTarget) {
+		return {
+			...eventTargetMethods
+		}.initialize(context);
 	}
 
-	return Object.defineProperties(obj, propertyDescriptors);
+	return {
+		...methods
+	}.initialize(context);
+}
+
+function implement(context) {
+	if (context instanceof EventTarget) {
+		return Object.defineProperties(context, eventTargetPropertyDescriptors)
+			.initialize();
+	}
+
+	return Object.defineProperties(context, propertyDescriptors)
+		.initialize();
 }
 
 export {
@@ -227,5 +248,6 @@ export {
 	propertyDescriptors,
 	eventTargetMethods,
 	eventTargetPropertyDescriptors,
-	factory
+	wrap,
+	implement
 };

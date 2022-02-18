@@ -1,7 +1,8 @@
 const { next: nextId } = require('id-sequence');
 
 const methods = {
-	initialize() {
+	initialize(context = this) {
+		this._context = context;
 		this._id = nextId('eventful-');
 		this._events = {};
 		this._listeningTo = {};
@@ -97,13 +98,13 @@ const methods = {
 			}
 		};
 		const process1 = (id) => {
-			const listentingTo = this._listeningTo[id];
+			const listeningTo = this._listeningTo[id];
 			if (event) {
-				if (listentingTo[event]) {
+				if (listeningTo[event]) {
 					process2(id, event);
 				}
 			} else {
-				for (const key in listentingTo) {
+				for (const key in listeningTo) {
 					process2(id, key);
 				}
 			}
@@ -122,6 +123,9 @@ const methods = {
 };
 
 const propertyDescriptors = {
+	_context: {
+		writable: true
+	},
 	_id: {
 		writable: true
 	},
@@ -133,7 +137,9 @@ const propertyDescriptors = {
 	},
 	initialize: {
 		enumerable: true,
-		value: methods.initialize
+		value() {
+			return methods.initialize.call(this);
+		}
 	},
 	terminate: {
 		enumerable: true,
@@ -161,12 +167,20 @@ const propertyDescriptors = {
 	}
 };
 
-function factory(obj) {
-	return Object.defineProperties(obj, propertyDescriptors);
+function wrap(context) {
+	return {
+		...methods
+	}.initialize(context);
+}
+
+function implement(context) {
+	return Object.defineProperties(context, propertyDescriptors)
+		.initialize();
 }
 
 module.exports = {
 	methods,
 	propertyDescriptors,
-	factory
+	wrap,
+	implement
 };

@@ -1,5 +1,11 @@
 "use strict";
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -18,6 +24,8 @@ var Eventful = function () {
       nextId = _IdSequence.next;
   var methods = {
     initialize: function initialize() {
+      var context = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this;
+      this._context = context;
       this._id = nextId('eventful-');
       this._events = {};
       this._listeningTo = {};
@@ -152,14 +160,14 @@ var Eventful = function () {
       };
 
       var process1 = function process1(id) {
-        var listentingTo = _this2._listeningTo[id];
+        var listeningTo = _this2._listeningTo[id];
 
         if (event) {
-          if (listentingTo[event]) {
+          if (listeningTo[event]) {
             process2(id, event);
           }
         } else {
-          for (var key in listentingTo) {
+          for (var key in listeningTo) {
             process2(id, key);
           }
         }
@@ -179,6 +187,9 @@ var Eventful = function () {
     }
   };
   var propertyDescriptors = {
+    _context: {
+      writable: true
+    },
     _id: {
       writable: true
     },
@@ -190,7 +201,9 @@ var Eventful = function () {
     },
     initialize: {
       enumerable: true,
-      value: methods.initialize
+      value: function value() {
+        return methods.initialize.call(this);
+      }
     },
     terminate: {
       enumerable: true,
@@ -218,11 +231,9 @@ var Eventful = function () {
     }
   };
   var eventTargetMethods = Object.assign({}, methods, {
-    initialize: function initialize() {
-      var eventTarget = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this;
-      this._eventTarget = eventTarget;
+    initialize: function initialize(context) {
       this._listeners = {};
-      return methods.initialize.call(this);
+      return methods.initialize.call(this, context);
     },
     on: function on(event, callback, owner) {
       var _this3 = this;
@@ -238,7 +249,7 @@ var Eventful = function () {
           return void _this3.trigger.apply(_this3, [event].concat(args));
         };
 
-        this._eventTarget.addEventListener(event, this._listeners[event]);
+        this._context.addEventListener(event, this._listeners[event]);
       }
 
       return this;
@@ -249,7 +260,7 @@ var Eventful = function () {
       methods.off.call(this, event, callback, owner);
 
       var process = function process(event) {
-        _this4._eventTarget.removeEventListener(event, _this4._listeners[event]);
+        _this4._context.removeEventListener(event, _this4._listeners[event]);
 
         _this4._listeners[event] = null;
       };
@@ -275,7 +286,9 @@ var Eventful = function () {
     },
     initialize: {
       enumerable: true,
-      value: eventTargetMethods.initialize
+      value: function value() {
+        return eventTargetMethods.initialize.call(this);
+      }
     },
     on: {
       enumerable: true,
@@ -287,12 +300,20 @@ var Eventful = function () {
     }
   });
 
-  function factory(obj) {
-    if (obj instanceof EventTarget) {
-      return Object.defineProperties(obj, eventTargetPropertyDescriptors);
+  function wrap(context) {
+    if (context instanceof EventTarget) {
+      return _objectSpread({}, eventTargetMethods).initialize(context);
     }
 
-    return Object.defineProperties(obj, propertyDescriptors);
+    return _objectSpread({}, methods).initialize(context);
+  }
+
+  function implement(context) {
+    if (context instanceof EventTarget) {
+      return Object.defineProperties(context, eventTargetPropertyDescriptors).initialize();
+    }
+
+    return Object.defineProperties(context, propertyDescriptors).initialize();
   }
 
   return {
@@ -300,7 +321,8 @@ var Eventful = function () {
     propertyDescriptors: propertyDescriptors,
     eventTargetMethods: eventTargetMethods,
     eventTargetPropertyDescriptors: eventTargetPropertyDescriptors,
-    factory: factory
+    wrap: wrap,
+    implement: implement
   };
 }();
 /* exported Eventful */
